@@ -3,12 +3,18 @@
   "launch_path": "/index.html",
   "type": "certified",
   "developer": {
-    "name": "Geo Mealer",
+    "name": "Geo Mealer / David Clarke",
     "url": "https://github.com/geoelectric/apitest"
   },
   "icons": {
     "128": "/style/icons/Apitest.png"
   },
   "permissions": {
-  }
+    "backgroundservice":{},
+    "attention":{},
+    "contacts":{ "access": "readwrite" },
+    "settings":{ "access": "readwrite" },
+    "desktop-notification":{}
+  },
+  "version": "1.0"
 }

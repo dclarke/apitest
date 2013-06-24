@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WebApps Part 1</title>
+    <link rel="stylesheet" href="../css/qunit.css">
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="../js/qunit.js"></script>
+
+    <script type="text/javascript">
+    console.log("Processing " );
+
+    function apptest(app) {
+      ok("API Testbed" == app.manifest.name, "Manifest Name = " + app.manifest.name );
+      ok(app.manifestURL, "App Manifest Url = " + app.manifestURL);
+      ok(app.origin, "App Origin = " + app.origin);
+      ok(app.installOrigin, "App Install Origin = " + app.installOrigin);
+      ok(app.installTime, "App Install Time = " + app.installTime);
+      ok(!app.receipts, "This app doesnt' have a receipt " + app.receipts);
+      ok(app.manifest.version == "1.0", "App Version = " + app.manifest.version );
+    }
+
+    var getInstalledreq = window.navigator.mozApps.getInstalled();
+    getInstalledreq.onerror = function (e) {
+      console.log("Error getting Installed App");
+    }
+    getInstalledreq.onsuccess = function (e) {
+      test( "API Get Installed Tests ", function() {
+        var app = getInstalledreq.result[0];
+        var len = getInstalledreq.result.length;
+        ok( 1 == len, "GetInstalled Length = " + len );
+        apptest(app);
+      });
+    } 
+    var getSelfreq = window.navigator.mozApps.getSelf();
+  
+    getSelfreq.onerror = function (e) {
+      console.log("Error getting Installed App");
+    }
+    getSelfreq.onsuccess = function (e) {
+      test( "API GetSelf Tests ", function() {
+        var app = getSelfreq.result;
+        apptest(app);
+      });
+    }
+    </script> 
+  </body>
+</html>

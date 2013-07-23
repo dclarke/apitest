@@ -1,5 +1,7 @@
 "use strict";
 
+window.open('tests/fmradio.html','foobar');
+
 var APITest = {
   get testList() {
     delete this.testList;

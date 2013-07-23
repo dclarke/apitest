@@ -14,7 +14,8 @@
     "attention":{},
     "contacts":{ "access": "readwrite" },
     "settings":{ "access": "readwrite" },
-    "desktop-notification":{}
+    "desktop-notification":{},
+    "fmradio":{}
   },
   "version": "1.0"
 }

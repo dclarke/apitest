@@ -10,5 +10,10 @@
     "128": "/style/icons/Apitest.png"
   },
   "permissions": {
+    "device-storage:sdcard":{ "access": "readcreate" },
+    "device-storage:pictures":{ "access": "readcreate" },
+    "device-storage:videos":{ "access": "readcreate" },
+    "device-storage:music":{ "access": "readcreate" },
+    "device-storage:apps":{ "access": "readcreate" }
   }
 }

@@ -3,8 +3,24 @@ body {
 }
 
 button {
-  font-size: 16px;
-  line-height: 32px;
+  font-size: 14px;
+  height: 30px;
+}
+
+input[type=text] {
+  font-size: 14px;
+  height: 26px;
+  width: 64px;
+}
+
+input:disabled { background: #ccc; }
+
+h4 {
+  margin-bottom: 0.5em;
+}
+
+h4 + p {
+  margin-top: 0.5em;
 }
 
 .result {

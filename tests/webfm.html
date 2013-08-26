@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WebFM</title>
+    <link rel="stylesheet" type="text/css" href="../style/test.css">
+    <script defer src="../js/common.js"></script>
+    <script defer src="../js/webfm.js"></script>
+  </head>
+  <body>
+    <p>API Self-Test: <span id="selftest" class="result">Not Run</span></p>
+
+    <p>Last Result: <span id="lastresult" class="result">None</span>
+    <br>Radio Event: <span id="radioevent" class="result">None</span>
+    <br>Change Event: <span id="changeevent" class="result">None</p>
+
+    <h4>Values:</h4>
+    <p>Enabled: <span id="enabled" class="result">None</span>
+    <br>Antenna Available: <span id="antenna" class="result">None</span>
+    <br>Frequency: <span id="frequency" class="result">None</span>
+    <br>Channel Width: <span id="width" class="result">None</span>
+    <br>Frequency Lower Bound: <span id="lowerbound" class="result">None</span>
+    <br>Frequency Upper Bound: <span id="upperbound" class="result">None</span></p>
+
+    <p style='line-height: 36px;'><button id="enable">Enable</button>
+    <button id="disable">Disable</button>
+    <input type="text" id="frequencyinput"/>
+    <button id="setfreq">Set Freq</button>
+    <br><button id="seekup">Seek Up</button>
+    <button id="seekdown">Seek Down</button>
+    <button id="cancelseek">Cancel Seek</button></p>
+  </body>
+</html>

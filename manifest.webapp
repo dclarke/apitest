@@ -1,20 +1,34 @@
 {
   "name": "API Testbed",
+  "description": "API Testbed",
   "launch_path": "/index.html",
+<<<<<<< HEAD
   "type": "privileged",
   "developer": {
     "name": "Geo Mealer",
     "url": "https://github.com/geoelectric/apitest"
   },
+=======
+>>>>>>> 06addf73b0bd374957232954e620837505c25350
   "icons": {
     "128": "/style/icons/Apitest.png"
   },
+  "developer": {
+    "name": "Mozilla WebAPI QA",
+    "url": "https://github.com/geoelectric/apitest"
+  },
+  "default_locale": "en",
+  "type": "privileged",
   "permissions": {
     "fmradio": {},
+<<<<<<< HEAD
     "geolocation": {},
     "device-storage:sdcard":{ "access": "readwrite" },
     "device-storage:music":{ "access": "readwrite" },
     "device-storage:pictures":{ "access": "readwrite" },
     "device-storage:videos":{ "access": "readwrite" }
+=======
+    "geolocation": {}
+>>>>>>> 06addf73b0bd374957232954e620837505c25350
   }
 }

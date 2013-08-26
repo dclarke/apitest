@@ -15,8 +15,7 @@ function runAll(steps) {
 
 }
 
-function logresult(testname, result, msg) {
-  
+function logResult(testname, result, msg) {
   var span = document.getElementById(testname);
   var my_results = document.getElementById("results");
   if(!span) {
@@ -29,6 +28,7 @@ function logresult(testname, result, msg) {
     my_results.appendChild(test);
     my_results.appendChild(span);
   } 
+  msg = testname + ": " + msg;
   report(testname, msg, msg, result);
 }
 
@@ -36,6 +36,7 @@ function selfTest() {
   return navigator.getDeviceStorage("kilimanjaro") == undefined &&
          navigator.getDeviceStorage("pictures") !== undefined &&
          navigator.getDeviceStorage("music") !== undefined &&
+         navigator.getDeviceStorage("sdcard") !== undefined &&
          navigator.getDeviceStorage("videos") !== undefined;
 }
 
@@ -54,57 +55,74 @@ function createRandomBlob(mime) {
   return blob = new Blob([getRandomBuffer()], {type: mime});
 }
 
-function addfiles(next) {
+function add(next) {
+  var request = gStorage.add(createRandomBlob(blobTypes[gIndex]));
+  request.onsuccess = function(added) {
+    logResult("add", added.target.result, "successfully added file blob " + added.target.result);
+    var request2 = gStorage.delete(added.target.result);
+    request2.onsuccess = function () {
+      next();
+    };
+  }
+  request.onerror = function (e) {
+    logResult("add", false, "error using api: " +e.target.error.name);
+    next();
+  }
+}
+
+function addFiles(next) {
   var success = 0; 
-  for (var i=0;i < activefiles.length; i++)  {
-    var request = gStorage.addNamed(createRandomBlob(blobTypes[i]), activefiles[i]);
+  for (var i=0;i < gActiveFiles.length; i++)  {
+    var request = gStorage.addNamed(createRandomBlob(blobTypes[gIndex]), gActiveFiles[i]);
     request.onsuccess = function () {
       success +=1;
-      if (success == activefiles.length) {
-        logresult("add", true, success + " files successfully added of " + activefiles.length);
+      if (success == gActiveFiles.length) {
+        logResult("addnamed", true, success + " files successfully added of " + gActiveFiles.length);
         next();
       }
     };
     request.onerror = function () {
-      logresult("add", false, "error adding file: " + activefiles[i]);
+      logResult("addnamed", false, "error adding file: " + gActiveFiles[i]);
+      next();
     };
   }
 }
 
 function setup (next) {
-  var setupSteps = [ deletefiles, 
-                     freespace,
-                     usedspace, 
+  var setupSteps = [ deleteFiles, 
+                     freeSpace,
+                     usedSpace, 
                      available,
                      addChangeListener,
-                     addfiles,
+                     add,
+                     addFiles,
                      next ];
-  console.log("in setup " +gStorageType);              
-  var index = storageTypes.indexOf(gStorageType);
-  activefiles = files[index];
-  console.log(setupSteps.length);
+
+  gStorageType = document.getElementById("devicestorage").value;
+  console.log ("gStorageType = " + gStorageType);
+  gStorage = navigator.getDeviceStorage(gStorageType);
+  gIndex = storageTypes.indexOf(gStorageType);
+  gActiveFiles = files[gIndex];
   runAll(setupSteps);
 }
 
 
-function freespace(next) {
+function freeSpace(next) {
   var request = gStorage.freeSpace();
   request.onsuccess = function () {
-    if(!free) {
+    if(free == null) {
       free = this.result;
-      console.log(free);
     } else {
-      console.log(free);
       var space = free - this.result;
-      var msg = "Lost space = " + (space / 1000).toFixed(2);
-      logresult('freespace', space > 1000, msg);
+      var msg = " space changed = " + space + " bytes";
+      logResult('freespace', space > 1000, msg);
       free = null;
     }
     next();
   };
 }
 
-function usedspace(next) {
+function usedSpace(next) {
   console.log("in usedspace");
   var request = gStorage.usedSpace();
   request.onsuccess = function () {
@@ -113,8 +131,8 @@ function usedspace(next) {
     } else {
       
       var space = this.result - used;
-      var msg = "Used space differential = " + (space / 1000).toFixed(2);
-      logresult('usedspace', space > 1000, msg);
+      var msg = " space changed = " + space + " bytes";
+      logResult('usedspace', space > 1000, msg);
       used = null; 
     }
     next();
@@ -123,31 +141,28 @@ function usedspace(next) {
 
 function available(next) {
   var request = gStorage.available();
-  request.onsuccess = function () {
-    if(avail == null) {
-      avail = this.result;
-    } else { 
-      var space = avail - this.result;
-      console.log("space = " + space);
-      var msg = "Available space differential = " + (space / 1000).toFixed(2);
-      logresult('available', space > 1000, msg);
-      avail = null;
+  request.onsuccess = function (e) {
+    status = e.target.result;
+    if(status == "available") {
+      logResult('available', true, gStorageType + " is available");
     }
+    else {
+      logResult('available', false, gStorageTypeType + " is " + status);
+    }
+    next();
+  };
+  request.onerror = function (e) {
+    logResult('available', false, "Error occurred on api call");
     next();
   }
 }
 
 function get(next) {
-  var index = storageTypes.indexOf(gStorageType);
-  var file = activefiles[0];
+  var file = gActiveFiles[0];
   console.log('get file = ' + file);
   var request = gStorage.get(file);
   request.onsuccess = function ()  {
-    logresult('get', this.result.name, "Get: successfully verified: " + this.result.name);
-                     //this.result.size && 
-                     //this.result.type &&
-                     //this.result.lastModifiedDate
-                     //, "Get: successfully verified: " + this.result.name); 
+    logResult('get', this.result.name, "successfully verified: " + this.result.name);
     next();
   }
 }
@@ -156,25 +171,24 @@ function enumerate(next) {
   var cursor = gStorage.enumerate();
   var enumeratedfiles = [];
   var pass = true;
-  console.log("entered enumerate");
   cursor.onsuccess = function () {
      if (cursor.result !== null) {
        enumeratedfiles.push(cursor.result.name);
        cursor.continue(); 
      } else {
-       for each (var file in activefiles) {
-         if(enumeratedfiles.indexOf(file) < 0) {
+       for each (var file in gActiveFiles) {
+         if((enumeratedfiles.indexOf(file) < 0) &&
+            (enumeratedfiles.indexOf("/sdcard/" + file) < 0)){
            pass = false;
          }
        }
-       console.log(enumeratedfiles.toString());
-       logresult("enumerate", pass, "found : " + enumeratedfiles.toString());
+       logResult("enumerate", pass, enumeratedfiles.toString());
        next();
      }
   }
 }
 
-function enumerateeditable(next) {
+function enumerateEditable(next) {
   var cursor = gStorage.enumerateEditable(); 
   var enumeratedfiles = [];
   var pass = true;
@@ -183,23 +197,23 @@ function enumerateeditable(next) {
       enumeratedfiles.push(cursor.result.name);
       cursor.continue();
     } else {
-      for each (var file in activefiles) {
-         if(enumeratedfiles.indexOf(file) < 0) {
+      for each (var file in gActiveFiles) {
+         if((enumeratedfiles.indexOf(file) < 0) &&
+            (enumeratedfiles.indexOf("/sdcard/" + file) < 0)) {
            pass = false;
          }
       }
-      logresult("enumerateeditable", pass, "found : " + enumeratedfiles.toString());
+      logResult("enumerateEditable", pass, enumeratedfiles.toString());
       next();
     }
   }
 }
 
 function onChange(change) {
-  console.log("got change event: " +change.reason );
   changeevents[change.reason]+=1;
 }
+
 function addChangeListener(next) {
-  
   gStorage.addEventListener("change", onChange);
   var func = function() { next(); console.log("called next"); };
   console.log('added event listener');
@@ -208,51 +222,53 @@ function addChangeListener(next) {
 
 function changed() {
   gStorage.removeEventListener("change", onChange);
-  logresult("createdevents", changeevents["created"] == 1 ? true : false, 
-            "Logged created events: " +  changeevents["created"]);
-  logresult("modifiedevents", changeevents["modified"] == 1 ? true : false, 
-            "Logged modified events: " +  changeevents["modified"]);
-  logresult("deletedevents", changeevents["deleted"] == 1 ? true : false,
-            "Logged deleted events: " +  changeevents["deleted"]);
+  logResult("createdevents", changeevents["created"] == (gActiveFiles.length + 1) ? true : false, 
+            changeevents["created"]);
+  logResult("modifiedevents", changeevents["modified"] == (gActiveFiles.length + 1) ? true : false, 
+            changeevents["modified"]);
+  logResult("deletedevents", changeevents["deleted"] == (gActiveFiles.length + 1) ? true : false,
+            changeevents["deleted"]);
   changeevents['created'] = 0;
   changeevents['modified'] = 0;
   changeevents['deleted'] = 0;
 }
 
-function deletefiles(next) {
+function deleteFiles(next) {
   var success = 0;
-  if (typeof activefiles === "string") {
-    activefiles = [activefiles];
+  var i = 0;
+  if (typeof gActiveFiles === "string") {
+    gActiveFiles = [activefiles];
   }
-  console.log(activefiles[0]);
-  for (var i=0;i < activefiles.length; i++)  {
-    var request = gStorage.delete(activefiles[i]);
+  for (i=0;i < gActiveFiles.length; i++)  {
+    var request = gStorage.delete(gActiveFiles[i]);
     request.onsuccess = function () {
       success +=1;
-      if (success == activefiles.length) {
-        logresult("delete", true, success + " files successfully deleted of " + activefiles.length);
+      if (success == gActiveFiles.length) {
+        logResult("deleteFiles", true, success + " files successfully deleted of " + gActiveFiles.length);
         next();
       }
     };
-    request.onerror = function () {
-      logresult("delete", false, "failure deleting file " + activefiles[i]);
+    request.onerror = function (e) {
+      logResult("delete", false, "failure deleting file " + gActiveFiles[i] + 
+                 "reason: " + e.target.error.name);
     };
   }
 }
 
 report('selftest', 'PASS', 'FAIL', selfTest());
 
-var storageTypes = ["pictures", "videos", "music", "sdcard"];
-var blobTypes = ["image/png", "video/ogv", "audio/mp3", "text/plain"];
+var storageTypes = ["pictures", "videos", "music", "sdcard", "apps"];
+var blobTypes = ["image/png", "video/webm", "audio/mp3", "text/plain", "text/plain"];
 var files = [["a.png", "b.png", "c.png"], 
              ["a.ogv", "b.ogv"],
              ["a.mp3", "b.mp3", "c.mp3"], 
-             ["plain.txt"]];
+             ["plain.txt"], 
+             ["foobar.txt", "b.mp4"]];
+var gIndex = 0;
+var gActiveFiles = null;
+var gStorage = null;
 
-var activefiles = null;
-var gStorage = navigator.getDeviceStorage("sdcard");
-
-var gStorageType = "sdcard";
+var gStorageType = null;
 var avail = null;
 var used = null;
 var free = null;
@@ -264,30 +280,18 @@ changeevents['deleted'] = 0;
 
 var orders = [
   setup,
-  freespace,
-  usedspace, 
-  available,
+  freeSpace,
+  usedSpace, 
   enumerate,
-  enumerateeditable,
+  enumerateEditable,
   get,
-  deletefiles,
+  deleteFiles,
   changed,
 ];
 
-var clickHandlers = {
-  'ds_select': function (evt) {
-    console.log("ds_select hit: " + evt.target.value);
-    gStorage = navigator.getDeviceStorage(evt.target.value);
-    gStorageType = evt.target.value;
-     
-    runAll(orders);
-    console.log("runAll happened");
-  }
-};
-
 document.body.addEventListener('change', function (evt) {
-                               if (clickHandlers[evt.target.id || evt.target.dataset.fn])
-                               clickHandlers[evt.target.id || evt.target.dataset.fn].call(this, evt);
+                               if (evt.target.id == "devicestorage" ) 
+                                 runAll(orders);
                                });
 
 window.onload = function () {
@@ -295,12 +299,12 @@ window.onload = function () {
 
   for (var types in storageTypes) {
     var dstorages = navigator.getDeviceStorages(types); 
+    console.log(dstorages);
     for (var i = 0; i < dstorages.length; i++) {
       dstorages_txt = dstorages_txt.concat(dstorages[i].storageName, ", ");
     }
   }
 
-  console.log("onload processing " + dstorages_txt );
-  logresult("dstorages", true, "storages available : " + dstorages_txt);
+  logResult("dstorages", true, "storages available : " + dstorages_txt);
   runAll(orders);
 }

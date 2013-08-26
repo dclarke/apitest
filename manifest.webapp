@@ -1,7 +1,7 @@
 {
   "name": "API Testbed",
   "launch_path": "/index.html",
-  "type": "certified",
+  "type": "privileged",
   "developer": {
     "name": "Geo Mealer",
     "url": "https://github.com/geoelectric/apitest"
@@ -10,10 +10,11 @@
     "128": "/style/icons/Apitest.png"
   },
   "permissions": {
-    "device-storage:sdcard":{ "access": "readcreate" },
-    "device-storage:pictures":{ "access": "readcreate" },
-    "device-storage:videos":{ "access": "readcreate" },
-    "device-storage:music":{ "access": "readcreate" },
-    "device-storage:apps":{ "access": "readcreate" }
+    "fmradio": {},
+    "geolocation": {},
+    "device-storage:sdcard":{ "access": "readwrite" },
+    "device-storage:music":{ "access": "readwrite" },
+    "device-storage:pictures":{ "access": "readwrite" },
+    "device-storage:videos":{ "access": "readwrite" }
   }
 }
